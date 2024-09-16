@@ -15,9 +15,6 @@
     ; d(u+v)/dx = du/dx + dv/dx
     [(g+ u v)
      (g+ (deriv u x) (deriv v x))]
-    ; d(-u)/dx = -du/dx
-    [(gneg u)
-     (gneg (deriv u x))]
     ; d(uv)/dx = du/dx v + u dv/dx
     [(g* u v)
      (g+ (g* (deriv u x) v)

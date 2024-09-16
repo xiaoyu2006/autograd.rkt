@@ -25,7 +25,7 @@
 
 ;; Gradient operators/functions
 (struct g+ (a b) #:prefab)
-(struct gneg (a) #:prefab)
+(define (gneg a) (g* a -1))
 (define (g- a b) (g+ a (gneg b)))
 (struct g* (a b) #:prefab)
 (define (ginv a) (g^ a -1))
@@ -47,7 +47,6 @@
   (match f
     [(var _name val) val]
     [(g+ a b) (+ (evaluate a) (evaluate b))]
-    [(gneg a) (- (evaluate a))]
     [(g* a b) (* (evaluate a) (evaluate b))]
     [(g^ a b) (expt (evaluate a) (evaluate b))]
     [(gsin a) (sin (evaluate a))]
@@ -55,16 +54,16 @@
     [n #:when (number? n) n]
     ))
 
-(provide (struct-out var)
+(provide cached define/cached evaluate
+
+         (struct-out var) define/var
 
          (struct-out gsin)
-         (struct-out g+)
-         (struct-out gneg) g-
+         (struct-out g+) gneg g-
          (struct-out g*) ginv g/
          (struct-out g^)
          (struct-out gln) glog
-
-         cached define/cached define/var evaluate)
+         )
 
 (module+ test
   (require rackunit)
