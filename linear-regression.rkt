@@ -3,26 +3,24 @@
 (require racket/list)
 (require "common.rkt")
 
+;; f(x1, x2) = ka * x1 + kb * x2 + kc
 (define (model x1 x2 ka kb kc)
   (g+ (g+ (g* ka x1) (g* kb x2)) kc))
 
 ;; Whole dataset as a batch, in the form of (((x1 x2) y) ...)
 (define (loss dataset ka kb kc)
-  (let ([len (length dataset)])
-    (g/ (loss-iter dataset ka kb kc) len)))
-
-(define (loss-iter dataset ka kb kc)
-  (cond
-    [(null? dataset) 0]
-    [(let* ([data (first dataset)]
-            [rest-data (rest dataset)]
-            [input (first data)]
-            [x1 (first input)]
-            [x2 (second input)]
-            [y (second data)]
-            [fxy (model x1 x2 ka kb kc)])
-       (g+ (g^ (g- fxy y) 2)
-           (loss-iter rest-data ka kb kc)))]))
+  (let ([n (length dataset)])
+    (g/ (foldl (lambda (datum acc)
+                (let* ([input (first datum)]
+                       [x1 (first input)]
+                       [x2 (second input)]
+                       [y_actual (second datum)]
+                       [y_pred (model x1 x2 ka kb kc)]
+                       [squard-diff (g^ (g- y_actual y_pred) 2)])
+                  (g+ squard-diff acc)))
+              0
+              dataset)
+       n)))
 
 (require "forward.rkt")
 
@@ -37,7 +35,7 @@
     (set-var-val! kc (- (var-val kc) (* learning-rate dkc)))
     (evaluate loss-symb)))
 
-(define (train dataset ka kb kc learning-rate iterations)
+(define (train! dataset ka kb kc learning-rate iterations)
   (for ([i (in-range iterations)])
     (define l (gradient-descent! dataset ka kb kc learning-rate))
     (displayln (format "Iteration ~a loss: ~a" i l)))
@@ -54,8 +52,8 @@
   (define (generate-linear-regression-data n a b c noise-std)
     (let ([dist (normal-dist 0 noise-std)])
       (for/list ([_i n])
-        (let* ([x1 (random -10 10)]
-               [x2 (random -10 10)]
+        (let* ([x1 (random -3 3)]
+               [x2 (random -3 3)]
                [noise (sample dist)]
                [y (+ (+ (* a x1) (* b x2)) c noise)])
           (list (list x1 x2) y)))))
@@ -64,7 +62,7 @@
   (define a 3.0)
   (define b 8.0)
   (define c -4.0)
-  (define noise-std 0.8)
+  (define noise-std 1)
 
   (define *dataset* (generate-linear-regression-data num-points a b c noise-std))
   (provide *dataset*))
@@ -73,4 +71,4 @@
 (define/var a (random))
 (define/var b (random))
 (define/var c (random))
-(train *dataset* a b c 0.00008 256)
+(train! *dataset* a b c 0.005 300)
