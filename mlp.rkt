@@ -30,7 +30,7 @@
                dataset)
         n)))
 
-(require "forward.rkt")
+(require "autograd.rkt")
 
 (define (gradient-descent! dataset params learning-rate)
   (let* ([current-loss (loss dataset params)]
@@ -99,3 +99,6 @@
 
 (define params (list w1 w2 w3 b1 b2 b3 bw1 bw2 bw3 bb))
 (train! *dataset* params 0.0005 500)
+
+(define (model-eval x)
+  (evaluate (apply model (cons x params))))

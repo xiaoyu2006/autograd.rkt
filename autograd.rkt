@@ -4,8 +4,7 @@
 (require racket/math)
 (require "common.rkt")
 
-;; Partial derivatives of $f with regard to $x, in expression again (in case of high order derivatives)
-;; The computation graph is constructed implicitly in the cache
+;; Partial derivatives of $f with regard to $x, in expression again
 (define/cached (deriv f x)
   (match f
     ; dx/dx = 1 ; dy/dx = 0

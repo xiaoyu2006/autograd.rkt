@@ -11,18 +11,18 @@
 (define (loss dataset ka kb kc)
   (let ([n (length dataset)])
     (g/ (foldl (lambda (datum acc)
-                (let* ([input (first datum)]
-                       [x1 (first input)]
-                       [x2 (second input)]
-                       [y_actual (second datum)]
-                       [y_pred (model x1 x2 ka kb kc)]
-                       [squard-diff (g^ (g- y_actual y_pred) 2)])
-                  (g+ squard-diff acc)))
-              0
-              dataset)
-       n)))
+                 (let* ([input (first datum)]
+                        [x1 (first input)]
+                        [x2 (second input)]
+                        [y_actual (second datum)]
+                        [y_pred (model x1 x2 ka kb kc)]
+                        [squard-diff (g^ (g- y_actual y_pred) 2)])
+                   (g+ squard-diff acc)))
+               0
+               dataset)
+        n)))
 
-(require "forward.rkt")
+(require "autograd.rkt")
 
 (define (gradient-descent! dataset ka kb kc learning-rate)
   (let* ([loss-symb (loss dataset ka kb kc)]
@@ -72,3 +72,4 @@
 (define/var b (random))
 (define/var c (random))
 (train! *dataset* a b c 0.005 300)
+
