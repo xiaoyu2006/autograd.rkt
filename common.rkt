@@ -28,7 +28,7 @@
 (struct gneg (a) #:prefab)
 (define (g- a b) (g+ a (gneg b)))
 (struct g* (a b) #:prefab)
-(struct ginv (a) #:prefab)
+(define (ginv a) (g^ a -1))
 (define (g/ a b) (g* a (ginv b)))
 (struct g^ (a b) #:prefab)
 (struct gsin (a) #:prefab)
@@ -49,7 +49,6 @@
     [(g+ a b) (+ (evaluate a) (evaluate b))]
     [(gneg a) (- (evaluate a))]
     [(g* a b) (* (evaluate a) (evaluate b))]
-    [(ginv a) (/ 1 (evaluate a))]
     [(g^ a b) (expt (evaluate a) (evaluate b))]
     [(gsin a) (sin (evaluate a))]
     [(gln a) (log (evaluate a))]
@@ -57,12 +56,18 @@
     ))
 
 (provide (struct-out var)
+
          (struct-out gsin)
          (struct-out g+)
          (struct-out gneg) g-
-         (struct-out g*)
-         (struct-out ginv) g/
+         (struct-out g*) ginv g/
          (struct-out g^)
          (struct-out gln) glog
+
          cached define/cached define/var evaluate)
 
+(module+ test
+  (require rackunit)
+  (check-= (evaluate (g+ (var 'x 2) (var 'y 3)))
+           (+ 2 3)
+           0.000001))

@@ -22,9 +22,6 @@
     [(g* u v)
      (g+ (g* (deriv u x) v)
          (g* u (deriv v x)))]
-    ; d(u^-1)/dx = -u^-2 du/dx
-    [(ginv u)
-     (g* -1 (g* (g^ u -2) (deriv u x)))]
     ; d(u^C)/dx = C u^(C-1) du/dx
     [(g^ u c)
      #:when (number? c)
