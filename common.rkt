@@ -21,7 +21,7 @@
 
 ;;; Expression *tree* with elementary functions
 
-(struct var (name val) #:prefab)
+(struct var (name val) #:prefab #:mutable)
 
 ;; Gradient operators/functions
 (struct g+ (a b) #:prefab)
@@ -43,7 +43,7 @@
 
 ;;; Computational *Tree*
 
-(define/cached (evaluate f)
+(define (evaluate f)
   (match f
     [(var _name val) val]
     [(g+ a b) (+ (evaluate a) (evaluate b))]
@@ -52,6 +52,7 @@
     [(gsin a) (sin (evaluate a))]
     [(gln a) (log (evaluate a))]
     [n #:when (number? n) n]
+    [_else (error "Unsupported expression type in evaluate" f)]
     ))
 
 (provide cached define/cached evaluate

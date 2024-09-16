@@ -1,3 +1,3 @@
 # autograd.rkt
 
-Simple autograd demo in Racket. Licensed in MIT.
+Simple autograd that supports elementary operations and functions. Partially 
