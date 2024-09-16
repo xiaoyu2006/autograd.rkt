@@ -18,8 +18,16 @@
        (cached (lambda (args ...) body ...)))]))
 
 
-;;; Variable that differentiate regarding to
+;;; Expression *Tree*
 (struct var (name val) #:prefab)
+(struct g+ (a b) #:prefab)
+(struct g-neg (a) #:prefab)
+(define (g- a b) (g+ a (g-neg b)))
+(struct g* (a b) #:prefab)
+(struct g-inv (a) #:prefab)
+(define (g/ a b) (g* a (g-inv b)))
+(struct g^ (a b) #:prefab)
+(struct gsin (a) #:prefab)
 
 (define-syntax define/var
   (syntax-rules ()
@@ -31,16 +39,22 @@
 
 (define/cached (evaluate f)
   (match f
-    [(var _name val) val]                             ; unwarp var
-    [(list '+ a b) (+ (evaluate a) (evaluate b))]    ; add
-    [(list 'n a) (- (evaluate a))]                   ; neg NOTE: (- a b) = (add a (neg b))
-    [(list '* a b) (* (evaluate a) (evaluate b))]    ; mul
-    [(list 'i a) (/ 1 (evaluate a))]                 ; inv NOTE: (/ a b) = (mul a (inv b)) 
-    [(list 'e a b) (expt (evaluate a) (evaluate b))] ; exp
-    [n #:when (number? n) n]                         ; constant
+    [(var _name val) val]
+    [(g+ a b) (+ (evaluate a) (evaluate b))]
+    [(g-neg a) (- (evaluate a))]
+    [(g* a b) (* (evaluate a) (evaluate b))]
+    [(g-inv a) (/ 1 (evaluate a))]
+    [(g^ a b) (expt (evaluate a) (evaluate b))]
+    [(gsin a) (sin (evaluate a))]
+    [n #:when (number? n) n]
     ))
 
 (provide (struct-out var)
+         (struct-out gsin)
+         (struct-out g+)
+         (struct-out g-neg) g-
+         (struct-out g*)
+         (struct-out g-inv) g/
+         (struct-out g^)
          cached define/cached define/var evaluate)
-
 

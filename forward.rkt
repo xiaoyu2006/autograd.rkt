@@ -2,8 +2,9 @@
 
 (require racket/match)
 (require "common.rkt")
+(require racket/math)
 
-;; Partial derivatives of $f with regard to $x, in expression again
+;; Partial derivatives of $f with regard to $x, in expression again (in case of high order derivatives)
 (define/cached (deriv f x)
   (match f
     ; dx/dx = 1 ; dy/dx = 0
@@ -12,36 +13,49 @@
     ; dC/dx = 0
     [n #:when (number? n) 0]
     ; d(u+v)/dx = du/dx + dv/dx
-    [(list '+ u v)                                  
-     (list '+ (deriv u x) (deriv v x))]
+    [(g+ u v)
+     (g+ (deriv u x) (deriv v x))]
     ; d(-u)/dx = -du/dx
-    [(list 'n u)
-     (list '- (deriv u x))]
+    [(g-neg u)
+     (g-neg (deriv u x))]
     ; d(uv)/dx = du/dx v + u dv/dx
-    [(list '* u v)
-     `(+ (* ,(deriv u x) ,v)
-         (* ,u ,(deriv v x)))]
+    [(g* u v)
+     (g+ (g* (deriv u x) v)
+         (g* u (deriv v x)))]
     ; d(u^-1)/dx = -u^-2 du/dx
-    [(list 'i u)
-     `(* -1 (/ 1 (expt ,u 2)) ,(deriv u x))]
+    [(g-inv u)
+     (g* -1 (g* (g^ u -2) (deriv u x)))]
     ; d(u^C)/dx = C u^(C-1) du/dx
-    [(list 'e u n)
-      #:when (number? n)
-     `(* ,n (* (e ,u ,(- n 1)) ,(deriv u x)))]
+    [(g^ u c)
+     #:when (number? c)
+     (g* c (g* (g^ u (- c 1)) (deriv u x)))]
+    ; d(C^u)/dx = C^u ln(C) du/dx
+    [(g^ c u)
+     #:when (number? c)
+     (g* (g^ c u) (g* (log c) (deriv u x)))]
+    ; d(sin(u))/dx = cos(u) du/dx = sin(pi/2 - u) du/dx
+    [(gsin u)
+     (g* (gsin (g- (/ pi 2) u)) (deriv u x))]
     ; More special cases...
-    [_catchall (error 'deriv "not implemented")]
     ))
 
 ;;; Put together
 
-(define/var x 1.0)
-(define/var y 2.0)
-
-; f1 = x * ( x + y^2 )
-(define sym-f1 `(* ,x (+ ,x (e ,y 2))))
-
-(define sym-f1-dx (deriv sym-f1 'x))
-(define sym-f1-dy (deriv sym-f1 'y))
-(displayln (evaluate sym-f1))
-(displayln (evaluate sym-f1-dx))
-(displayln (evaluate sym-f1-dy))
+(module+ test
+  (require rackunit)
+  (define X* 2)
+  (define Y* 3)
+  (define Z* 7)
+  (define x (var 'x X*))
+  (define y (var 'y Y*))
+  (define z (var 'z Z*))
+  ; f = sin(x+y) (xy + z^2)
+  (define f (g* (gsin (g+ x y)) (g+ (g* x y) (g^ z 2))))
+  (check-= (evaluate f)
+           (* (sin (+ X* Y*)) (+ (* X* Y*) (expt Z* 2)))
+           0.000001)
+  (check-= (evaluate (deriv f 'x))
+           (+ (* (cos (+ X* Y*)) (+ (* X* Y*) (expt Z* 2)))
+              (* (sin (+ X* Y*)) Y*))
+           0.000001)
+)
