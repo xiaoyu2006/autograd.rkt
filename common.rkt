@@ -2,7 +2,8 @@
 
 (require racket/match)
 
-;;; Cache function
+;;; Cache utility
+
 ;; f has to be a pure function
 (define (cached f)
   (let ([outputs (make-hash)])
@@ -18,16 +19,21 @@
        (cached (lambda (args ...) body ...)))]))
 
 
-;;; Expression *Tree*
+;;; Expression *tree* with elementary functions
+
 (struct var (name val) #:prefab)
+
+;; Gradient operators/functions
 (struct g+ (a b) #:prefab)
-(struct g-neg (a) #:prefab)
-(define (g- a b) (g+ a (g-neg b)))
+(struct gneg (a) #:prefab)
+(define (g- a b) (g+ a (gneg b)))
 (struct g* (a b) #:prefab)
-(struct g-inv (a) #:prefab)
-(define (g/ a b) (g* a (g-inv b)))
+(struct ginv (a) #:prefab)
+(define (g/ a b) (g* a (ginv b)))
 (struct g^ (a b) #:prefab)
 (struct gsin (a) #:prefab)
+(struct gln (a) #:prefab)
+(define (glog base a) (g/ (gln a) (log base)))
 
 (define-syntax define/var
   (syntax-rules ()
@@ -41,20 +47,22 @@
   (match f
     [(var _name val) val]
     [(g+ a b) (+ (evaluate a) (evaluate b))]
-    [(g-neg a) (- (evaluate a))]
+    [(gneg a) (- (evaluate a))]
     [(g* a b) (* (evaluate a) (evaluate b))]
-    [(g-inv a) (/ 1 (evaluate a))]
+    [(ginv a) (/ 1 (evaluate a))]
     [(g^ a b) (expt (evaluate a) (evaluate b))]
     [(gsin a) (sin (evaluate a))]
+    [(gln a) (log (evaluate a))]
     [n #:when (number? n) n]
     ))
 
 (provide (struct-out var)
          (struct-out gsin)
          (struct-out g+)
-         (struct-out g-neg) g-
+         (struct-out gneg) g-
          (struct-out g*)
-         (struct-out g-inv) g/
+         (struct-out ginv) g/
          (struct-out g^)
+         (struct-out gln) glog
          cached define/cached define/var evaluate)
 

@@ -16,14 +16,14 @@
     [(g+ u v)
      (g+ (deriv u x) (deriv v x))]
     ; d(-u)/dx = -du/dx
-    [(g-neg u)
-     (g-neg (deriv u x))]
+    [(gneg u)
+     (gneg (deriv u x))]
     ; d(uv)/dx = du/dx v + u dv/dx
     [(g* u v)
      (g+ (g* (deriv u x) v)
          (g* u (deriv v x)))]
     ; d(u^-1)/dx = -u^-2 du/dx
-    [(g-inv u)
+    [(ginv u)
      (g* -1 (g* (g^ u -2) (deriv u x)))]
     ; d(u^C)/dx = C u^(C-1) du/dx
     [(g^ u c)
@@ -36,6 +36,9 @@
     ; d(sin(u))/dx = cos(u) du/dx = sin(pi/2 - u) du/dx
     [(gsin u)
      (g* (gsin (g- (/ pi 2) u)) (deriv u x))]
+    ; d(ln(u))/dx = 1/u du/dx
+    [(gln u)
+     (g* (ginv u) (deriv u x))]
     ; More special cases...
     ))
 
